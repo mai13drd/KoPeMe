@@ -41,7 +41,6 @@ public class KoPeMeStandardRuleStatement extends KoPeMeBasicStatement {
 						tr.checkValues(assertationvalues);
 					}
 				} catch (IllegalAccessException | InvocationTargetException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
