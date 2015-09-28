@@ -17,18 +17,16 @@ import de.dagere.kopeme.datacollection.TestResult;
 import de.dagere.kopeme.kieker.KoPeMeKiekerSupport;
 
 /**
- * A statement for running performance tests.
- * 
- * Should once become base class of several TestExecutingStatements - isn't yet.
- * 
- * @author reichelt
+ * A statement for running performance tests. Should once become base class of several TestExecutingStatements - isn't
+ * yet.
  *
+ * @author reichelt
  */
 public abstract class KoPeMeBasicStatement extends Statement {
 
 	private static final Logger LOG = LogManager.getLogger(KoPeMeBasicStatement.class);
 
-	protected Map<String, Double> maximalRelativeStandardDeviation;
+	protected Map<String, Double> maximumRelativeStandardDeviation;
 	protected Map<String, Long> assertationvalues;
 	protected String filename;
 	protected Method method;
@@ -38,7 +36,7 @@ public abstract class KoPeMeBasicStatement extends Statement {
 
 	/**
 	 * Initializes the KoPemeBasicStatement.
-	 * 
+	 *
 	 * @param runnables Runnables that should be run
 	 * @param method Method that should be executed
 	 * @param filename Name of the
@@ -54,17 +52,17 @@ public abstract class KoPeMeBasicStatement extends Statement {
 		if (annotation != null) {
 			try {
 				KoPeMeKiekerSupport.INSTANCE.useKieker(annotation.useKieker(), filename, method.getName());
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				System.err.println("kieker has failed!");
 				e.printStackTrace();
 			}
-			maximalRelativeStandardDeviation = new HashMap<>();
+			maximumRelativeStandardDeviation = new HashMap<>();
 			assertationvalues = new HashMap<>();
-			for (MaximalRelativeStandardDeviation maxDev : annotation.deviations()) {
-				maximalRelativeStandardDeviation.put(maxDev.collectorname(), maxDev.maxvalue());
+			for (final MaximalRelativeStandardDeviation maxDev : annotation.deviations()) {
+				maximumRelativeStandardDeviation.put(maxDev.collectorname(), maxDev.maxvalue());
 			}
 
-			for (Assertion a : annotation.assertions()) {
+			for (final Assertion a : annotation.assertions()) {
 				assertationvalues.put(a.collectorname(), a.maxvalue());
 			}
 		} else {
@@ -73,13 +71,13 @@ public abstract class KoPeMeBasicStatement extends Statement {
 	}
 
 	/**
-	 * Tests weather the collectors given in the assertions and the maximale relative standard deviations are correct
-	 * 
+	 * Tests whether the collectors given in the assertions and the maximum relative standard deviations are valid.
+	 *
 	 * @param tr Test Result that should be checked
 	 * @return Weather the result is valid
 	 */
 	protected boolean checkCollectorValidity(final TestResult tr) {
-		return PerformanceTestUtils.checkCollectorValidity(tr, assertationvalues, maximalRelativeStandardDeviation);
+		return PerformanceTestUtils.checkCollectorValidity(tr, assertationvalues, maximumRelativeStandardDeviation);
 	}
 
 	protected void runMainExecution(final TestResult tr) throws IllegalAccessException, InvocationTargetException {
@@ -94,11 +92,11 @@ public abstract class KoPeMeBasicStatement extends Statement {
 			runnables.getAfterRunnable().run();
 			tr.setRealExecutions(executions - 1);
 			LOG.debug("--- Stopping execution " + executions + "/" + annotation.executionTimes() + " ---");
-			for (Map.Entry<String, Double> entry : maximalRelativeStandardDeviation.entrySet()) {
+			for (final Map.Entry<String, Double> entry : maximumRelativeStandardDeviation.entrySet()) {
 				LOG.trace("Entry: {} {}", entry.getKey(), entry.getValue());
 			}
-			if (executions >= annotation.minEarlyStopExecutions() && !maximalRelativeStandardDeviation.isEmpty()
-					&& tr.isRelativeStandardDeviationBelow(maximalRelativeStandardDeviation)) {
+			if (executions >= annotation.minEarlyStopExecutions() && !maximumRelativeStandardDeviation.isEmpty()
+					&& tr.isRelativeStandardDeviationBelow(maximumRelativeStandardDeviation)) {
 				break;
 			}
 		}

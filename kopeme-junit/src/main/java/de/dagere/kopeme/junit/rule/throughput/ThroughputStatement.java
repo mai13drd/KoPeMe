@@ -78,11 +78,11 @@ public class ThroughputStatement extends KoPeMeBasicStatement {
 			runnables.getAfterRunnable().run();
 
 			log.debug("--- Stopping execution " + executions + "/" + executionTimes + " ---");
-			for (Map.Entry<String, Double> entry : maximalRelativeStandardDeviation.entrySet()) {
+			for (Map.Entry<String, Double> entry : maximumRelativeStandardDeviation.entrySet()) {
 				log.trace("Entry: {} {}", entry.getKey(), entry.getValue());
 			}
-			if (executions >= annotation.minEarlyStopExecutions() && !maximalRelativeStandardDeviation.isEmpty()
-					&& tr.isRelativeStandardDeviationBelow(maximalRelativeStandardDeviation)) {
+			if (executions >= annotation.minEarlyStopExecutions() && !maximumRelativeStandardDeviation.isEmpty()
+					&& tr.isRelativeStandardDeviationBelow(maximumRelativeStandardDeviation)) {
 				break;
 			}
 		}

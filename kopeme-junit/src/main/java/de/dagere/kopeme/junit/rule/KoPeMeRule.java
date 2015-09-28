@@ -84,4 +84,8 @@ public class KoPeMeRule implements TestRule {
 		}
 		return testMethod;
 	}
+
+	public Object getTestObject() {
+		return testObject;
+	}
 }
