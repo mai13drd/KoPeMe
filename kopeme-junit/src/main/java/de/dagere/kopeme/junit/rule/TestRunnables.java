@@ -13,30 +13,27 @@ import de.dagere.kopeme.junit.rule.annotations.BeforeNoMeasurement;
 
 /**
  * Saves all test runnables, i.e. the runnables that should be executed before and after the test and the test itself.
- * 
- * @author reichelt
  *
+ * @author reichelt
  */
 public class TestRunnables {
 
 	private static final Logger LOG = LogManager.getLogger(TestRunnables.class);
 
-	private final Runnable testRunnable, beforeRunnable, afterRunnable;
+	private final Runnable beforeRunnable, afterRunnable;
 
 	/**
 	 * Initializes the TestRunnables
-	 * 
+	 *
 	 * @param testRunnable Runnable for the test itself
 	 * @param testClass Class that should be tested
 	 * @param testObject Object that should be tested
 	 */
-	public TestRunnables(final Runnable testRunnable, final Class testClass, final Object testObject) {
-		super();
-		this.testRunnable = testRunnable;
+	public TestRunnables(final Class testClass, final Object testObject) {
 		final List<Method> beforeMethods = new LinkedList<>();
 		final List<Method> afterMethods = new LinkedList<>();
 		LOG.debug("Klasse: {}", testClass);
-		for (Method classMethod : testClass.getMethods()) {
+		for (final Method classMethod : testClass.getMethods()) {
 			LOG.trace("Prüfe: {}", classMethod);
 			if (classMethod.getAnnotation(BeforeNoMeasurement.class) != null) {
 				if (classMethod.getParameterTypes().length > 0) {
@@ -56,11 +53,10 @@ public class TestRunnables {
 
 			@Override
 			public void run() {
-				for (Method m : beforeMethods) {
+				for (final Method m : beforeMethods) {
 					try {
 						m.invoke(testObject);
 					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -72,11 +68,10 @@ public class TestRunnables {
 
 			@Override
 			public void run() {
-				for (Method m : afterMethods) {
+				for (final Method m : afterMethods) {
 					try {
 						m.invoke(testObject);
 					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -86,17 +81,8 @@ public class TestRunnables {
 	}
 
 	/**
-	 * Returns the test Runnable
-	 * 
-	 * @return Test-Runnable
-	 */
-	public Runnable getTestRunnable() {
-		return testRunnable;
-	}
-
-	/**
 	 * Returns the runnable, that should be run before the test
-	 * 
+	 *
 	 * @return Before-Runnable
 	 */
 	public Runnable getBeforeRunnable() {
@@ -105,7 +91,7 @@ public class TestRunnables {
 
 	/**
 	 * Returns the runnable, that should be run after the test
-	 * 
+	 *
 	 * @return After-Runnable
 	 */
 	public Runnable getAfterRunnable() {

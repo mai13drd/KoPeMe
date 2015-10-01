@@ -83,19 +83,35 @@ public class KoPeMeRuleParameters extends KoPeMeRule {
 
 	private final Method parametersMethod;
 	private final Field[] parameterFields;
+	private final Parameters ann;
 
 	public KoPeMeRuleParameters(final Object test) {
 		super(test);
-		parametersMethod = fetchParametersMethod();
-		parameterFields = fetchParameterFields();
+		if (getTestObject() != null) {
+			try {
+				parametersMethod = fetchParametersMethod();
+				parameterFields = fetchParameterFields();
+				ann = fetchParametersAnnotation();
+			} catch (final NoParameterException e) {
+				throw new RuntimeException(e);
+			}
+		} else {
+			parametersMethod = null;
+			parameterFields = null;
+			ann = null;
+		}
 	}
 
 	@Override
 	public Statement apply(final Statement base, final Description description) {
-		return new KoPeMeParameterStatement(base, description);
+		try {
+			return new KoPeMeParametersStatement(base, description, getTestObject());
+		} catch (final Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
-	private Method fetchParametersMethod() {
+	protected Method fetchParametersMethod() throws NoParameterException {
 		Method parametersMethod = null;
 		for (final Method method : getTestObject().getClass().getMethods()) {
 			if (method.isAnnotationPresent(Parameters.class)) {
@@ -107,12 +123,12 @@ public class KoPeMeRuleParameters extends KoPeMeRule {
 			}
 		}
 		if (parametersMethod == null) {
-			throw new RuntimeException("No Method annotated with @Parameters present!");
+			throw new NoParameterException();
 		}
 		return parametersMethod;
 	}
 
-	private Field[] fetchParameterFields() {
+	protected Field[] fetchParameterFields() throws NoParameterException {
 		final Map<Field, Integer> parameterFieldMap = new LinkedHashMap<>();
 		for (final Field field : getTestObject().getClass().getFields()) {
 			if (field.isAnnotationPresent(Parameter.class)) {
@@ -127,53 +143,75 @@ public class KoPeMeRuleParameters extends KoPeMeRule {
 			}
 			parameterFields[position] = field.getKey();
 		}
+		if (parameterFields.length == 0) {
+			throw new NoParameterException("No Fields annotated with @Parameter present!");
+		}
 		return parameterFields;
 	}
 
-	private final class KoPeMeParameterStatement extends Statement {
-		private final Statement base;
-		private final Description description;
-		final ParameterTestResult result;
+	protected Parameters fetchParametersAnnotation() {
+		return parametersMethod.getAnnotation(Parameters.class);
+	}
 
-		private KoPeMeParameterStatement(final Statement base, final Description description) {
-			this.description = description;
-			this.base = base;
-			final Parameters ann = parametersMethod.getAnnotation(Parameters.class);
-			result = new ParameterTestResult(ann.totalBoundary(), ann.relativeBoundary(), ann.collectorname());
+	protected final class NoParameterException extends Exception {
+		private static final long serialVersionUID = -1449901831953346413L;
+
+		public NoParameterException() {
+			super("No Method annotated with @Parameters present!");
 		}
 
-		@SuppressWarnings("unchecked")
+		public NoParameterException(final String message) {
+			super(message);
+		}
+	}
+
+	public class KoPeMeParametersStatement extends KoPeMeBasicStatement {
+
+		protected KoPeMeParametersStatement(final Statement base, final Description description, final Object testObject) throws Exception {
+			super(base, description, testObject);
+		}
+
 		@Override
 		public void evaluate() throws Throwable {
+			evaluateKoPeMeParameters(base, description);
+		}
 
+		protected void evaluateKoPeMeParameters(final Statement base, final Description description)
+				throws IllegalAccessException, InvocationTargetException, Exception, Throwable {
+			final ParameterTestResult result = new ParameterTestResult(ann.totalBoundary(), ann.relativeBoundary(), ann.collectorname());
 			final Map<Object[], Double> parameterSets = fetchWeightedParameters();
 			for (final Map.Entry<Object[], Double> instanceParameters : parameterSets.entrySet()) {
 				final Object[] parameters = instanceParameters.getKey();
 				parameterizeTest(parameters);
-				final KoPeMeStandardRuleStatement standardStatement = applyBaseRule();
-				if (standardStatement == null) {
+				final KoPeMeBasicStatement parameterStatement = applyBaseRule(base, description);
+				final Statement middleStatement = applyMiddleRules(parameterStatement, description);
+				if (parameterStatement == null) {
 					break;
 				}
-				standardStatement.evaluate();
+				middleStatement.evaluate();
 				final Double weight = instanceParameters.getValue();
-				if (!result.addResult(standardStatement, parameters, weight)) {
+				if (!result.addResult(parameterStatement, parameters, weight)) {
 					break;
 				}
 			}
 		}
 
-		private KoPeMeStandardRuleStatement applyBaseRule() {
-			final Statement statement = KoPeMeRuleParameters.super.apply(base, description);
-			final KoPeMeStandardRuleStatement standardStatement;
-			if (statement instanceof KoPeMeStandardRuleStatement) {
-				standardStatement = (KoPeMeStandardRuleStatement) statement;
+		protected Statement applyMiddleRules(final KoPeMeBasicStatement standardStatement, final Description description) {
+			return standardStatement;
+		}
+
+		protected KoPeMeBasicStatement applyBaseRule(final Statement baseToComplete, final Description description) {
+			final Statement stmt = KoPeMeRuleParameters.super.apply(baseToComplete, description);
+			final KoPeMeBasicStatement standardStatement;
+			if (stmt instanceof KoPeMeBasicStatement) {
+				standardStatement = (KoPeMeBasicStatement) stmt;
 			} else {
 				standardStatement = null;
 			}
 			return standardStatement;
 		}
 
-		private Map<Object[], Double> fetchWeightedParameters() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		protected Map<Object[], Double> fetchWeightedParameters() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 			final Object parameterObject = parametersMethod.invoke(getTestObject());
 			final Map<Object[], Double> weightedParameters = new LinkedHashMap<>();
 			if (parameterObject instanceof Iterable) {
@@ -197,7 +235,7 @@ public class KoPeMeRuleParameters extends KoPeMeRule {
 		}
 
 		@SuppressWarnings("unchecked")
-		private Object[] parameterizeTest(final Object[] parameters) throws Exception, IllegalAccessException {
+		protected Object[] parameterizeTest(final Object[] parameters) throws Exception, IllegalAccessException {
 			if (parameters.length != parameterFields.length) {
 				throw new Exception("Number of Parameter fields for injection is not equal to the number of returned values of the Parameters!"
 						+ " Counted fields: " + parameterFields.length + ", returned values: " + parameters.length);
@@ -207,6 +245,5 @@ public class KoPeMeRuleParameters extends KoPeMeRule {
 			}
 			return parameters;
 		}
-
 	}
 }

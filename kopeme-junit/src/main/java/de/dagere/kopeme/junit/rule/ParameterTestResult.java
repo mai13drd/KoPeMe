@@ -12,8 +12,8 @@ import java.util.Map;
  */
 public class ParameterTestResult {
 
-	private final Map<KoPeMeStandardRuleStatement, Object[]> parameters = new LinkedHashMap<>();
-	private final Map<KoPeMeStandardRuleStatement, Double> weights = new LinkedHashMap<>();
+	private final Map<KoPeMeBasicStatement, Object[]> parameters = new LinkedHashMap<>();
+	private final Map<KoPeMeBasicStatement, Double> weights = new LinkedHashMap<>();
 
 	private final Long totalBoundary;
 	private final Double relativeBoundary;
@@ -34,7 +34,7 @@ public class ParameterTestResult {
 	 * @param weight
 	 * @return
 	 */
-	public boolean addResult(final KoPeMeStandardRuleStatement statement, final Object[] parameters, final Double weight) {
+	public boolean addResult(final KoPeMeBasicStatement statement, final Object[] parameters, final Double weight) {
 		this.parameters.put(statement, parameters);
 		this.weights.put(statement, weight);
 		final long performance = statement.getTestResults().getValue(collectorName);
@@ -61,10 +61,10 @@ public class ParameterTestResult {
 		return collectorName;
 	}
 
-	public KoPeMeStandardRuleStatement getHeaviestWeightedRun() {
-		KoPeMeStandardRuleStatement heaviestRun = null;
+	public KoPeMeBasicStatement getHeaviestWeightedRun() {
+		KoPeMeBasicStatement heaviestRun = null;
 		final long heaviestPerformance = Long.MAX_VALUE;
-		for (final Map.Entry<KoPeMeStandardRuleStatement, Double> run : weights.entrySet()) {
+		for (final Map.Entry<KoPeMeBasicStatement, Double> run : weights.entrySet()) {
 			final long performance = run.getKey().getTestResults().getValue(collectorName);
 			if (performance / run.getValue() > heaviestPerformance) {
 				heaviestRun = run.getKey();
@@ -73,10 +73,10 @@ public class ParameterTestResult {
 		return heaviestRun;
 	}
 
-	public KoPeMeStandardRuleStatement getHeaviestRun() {
-		KoPeMeStandardRuleStatement heaviestRun = null;
+	public KoPeMeBasicStatement getHeaviestRun() {
+		KoPeMeBasicStatement heaviestRun = null;
 		final long heaviestPerformance = 0;
-		for (final Map.Entry<KoPeMeStandardRuleStatement, Double> run : weights.entrySet()) {
+		for (final Map.Entry<KoPeMeBasicStatement, Double> run : weights.entrySet()) {
 			final long performance = run.getKey().getTestResults().getValue(collectorName);
 			if (performance > heaviestPerformance) {
 				heaviestRun = run.getKey();
@@ -85,10 +85,10 @@ public class ParameterTestResult {
 		return heaviestRun;
 	}
 
-	public KoPeMeStandardRuleStatement getBestWeightedRun() {
-		KoPeMeStandardRuleStatement bestRun = null;
+	public KoPeMeBasicStatement getBestWeightedRun() {
+		KoPeMeBasicStatement bestRun = null;
 		final long bestPerformance = Long.MAX_VALUE;
-		for (final Map.Entry<KoPeMeStandardRuleStatement, Double> run : weights.entrySet()) {
+		for (final Map.Entry<KoPeMeBasicStatement, Double> run : weights.entrySet()) {
 			final long performance = run.getKey().getTestResults().getValue(collectorName);
 			if (performance / run.getValue() > bestPerformance) {
 				bestRun = run.getKey();
@@ -97,10 +97,10 @@ public class ParameterTestResult {
 		return bestRun;
 	}
 
-	public KoPeMeStandardRuleStatement getBestRun() {
-		KoPeMeStandardRuleStatement bestRun = null;
+	public KoPeMeBasicStatement getBestRun() {
+		KoPeMeBasicStatement bestRun = null;
 		final long bestPerformance = Long.MAX_VALUE;
-		for (final Map.Entry<KoPeMeStandardRuleStatement, Double> run : weights.entrySet()) {
+		for (final Map.Entry<KoPeMeBasicStatement, Double> run : weights.entrySet()) {
 			final long performance = run.getKey().getTestResults().getValue(collectorName);
 			if (performance > bestPerformance) {
 				bestRun = run.getKey();
@@ -112,19 +112,19 @@ public class ParameterTestResult {
 	/**
 	 * @return Returns the sorted List of all Statements that were run.
 	 */
-	public List<KoPeMeStandardRuleStatement> getRuns() {
+	public List<KoPeMeBasicStatement> getRuns() {
 		return new ArrayList<>(weights.keySet());
 	}
 
-	public Object[] getParameters(final KoPeMeStandardRuleStatement run) {
+	public Object[] getParameters(final KoPeMeBasicStatement run) {
 		return parameters.get(run);
 	}
 
-	public Long getPerformance(final KoPeMeStandardRuleStatement run) {
+	public Long getPerformance(final KoPeMeBasicStatement run) {
 		return run.getTestResults().getValue(collectorName);
 	}
 
-	public Double getWeight(final KoPeMeStandardRuleStatement run) {
+	public Double getWeight(final KoPeMeBasicStatement run) {
 		return weights.get(run);
 	}
 }
