@@ -12,6 +12,8 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import de.dagere.kopeme.datacollection.DataCollectorList;
+
 /**
  * An equivalent to the JUnit {@code RuleChain} for use with {@link KoPeMeRule} or {@link KoPeMeRuleParameters}. The
  * {@code KoPeMeRule} can be added explicitly or with the convenience method {@code koPeMe} respectively
@@ -41,8 +43,9 @@ public class KoPeMeRuleChain extends KoPeMeRuleParameters {
 		this.measuredRules = new ArrayList<TestRule>();
 	}
 
-	private KoPeMeRuleChain(final List<TestRule> outerRules, final List<TestRule> middleRules, final List<TestRule> innerRules, final Object testObject) {
-		super(testObject);
+	private KoPeMeRuleChain(final List<TestRule> outerRules, final List<TestRule> middleRules, final List<TestRule> innerRules, final Object testObject,
+			final DataCollectorList collectors) {
+		super(testObject, collectors);
 		this.outerRules = outerRules;
 		this.middleRules = middleRules;
 		this.innerRules = innerRules;
@@ -50,8 +53,8 @@ public class KoPeMeRuleChain extends KoPeMeRuleParameters {
 	}
 
 	public KoPeMeRuleChain(final List<TestRule> outerRules, final List<TestRule> middleRules, final List<TestRule> innerRules, final Object testObject,
-			final List<TestRule> measuredRules) {
-		super(testObject);
+			final DataCollectorList collectors, final List<TestRule> measuredRules) {
+		super(testObject, collectors);
 		this.outerRules = outerRules;
 		this.middleRules = middleRules;
 		this.innerRules = innerRules;
@@ -80,18 +83,48 @@ public class KoPeMeRuleChain extends KoPeMeRuleParameters {
 	}
 
 	/**
-	 * Returns a {@code KoPeMeRuleChain} where all following enclosed rules will be included in the performance
-	 * measurement. If no further Rules are added this is equal to a {@code KoPeMeRuleParameters}.
+	 * Returns a {@code KoPeMeRuleChain} where all following enclosed rules will be applied for each parameterization.
+	 * If no further Rules are added this is equal to a {@code KoPeMeRuleParameters}.
+	 *
+	 * @param test The instance of the test class. Usually {@code this} does the trick.
+	 * @param collectors The DataCollectorList that should be used for the measurement.
+	 * @return a {@code KoPeMeRuleChain} with a single {@link TestRule}.
+	 */
+	public static KoPeMeRuleChain outerKoPeMeParameters(final Object test, final DataCollectorList collectors) {
+		return emptyRuleChain().koPeMeParameters(test, collectors);
+	}
+
+	/**
+	 * Returns a {@code KoPeMeRuleChain} where all following enclosed rules will be applied for each parameterization.
+	 * If no further Rules are added this is equal to a {@code KoPeMeRuleParameters}.
+	 *
+	 * @param test The instance of the test class. Usually {@code this} does the trick.
+	 * @return a {@code KoPeMeRuleChain} with a single {@link TestRule}.
+	 */
+	public static KoPeMeRuleChain outerKoPeMeParameters(final Object test) {
+		return emptyRuleChain().koPeMeParameters(test);
+	}
+
+	/**
+	 * Returns a {@code KoPeMeRuleChain} where all following enclosed rules will be applied for each performance
+	 * measuring run. If no further Rules are added this is equal to a {@code KoPeMeRule}.
+	 *
+	 * @param test The instance of the test class. Usually {@code this} does the trick.
+	 * @return a {@code KoPeMeRuleChain} with a single {@link TestRule}.
+	 */
+	public static KoPeMeRuleChain outerKoPeMe(final Object test, final DataCollectorList collectors) {
+		return emptyRuleChain().koPeMe(test, collectors);
+	}
+
+	/**
+	 * Returns a {@code KoPeMeRuleChain} where all following enclosed rules will be applied for each performance
+	 * measuring run. If no further Rules are added this is equal to a {@code KoPeMeRule}.
 	 *
 	 * @param test The instance of the test class. Usually {@code this} does the trick.
 	 * @return a {@code KoPeMeRuleChain} with a single {@link TestRule}.
 	 */
 	public static KoPeMeRuleChain outerKoPeMe(final Object test) {
 		return emptyRuleChain().koPeMe(test);
-	}
-
-	public static KoPeMeRuleChain outerKoPeMeParameters(final Object test) {
-		return emptyRuleChain().koPeMeParameters(test);
 	}
 
 	/**
@@ -120,7 +153,7 @@ public class KoPeMeRuleChain extends KoPeMeRuleParameters {
 			outerChain.add(enclosedRule);
 			outerChain.addAll(outerRules);
 		}
-		return new KoPeMeRuleChain(outerChain, middleChain, innerChain, getTestObject());
+		return new KoPeMeRuleChain(outerChain, middleChain, innerChain, getTestObject(), getCollectors());
 	}
 
 	public KoPeMeRuleChain measure(final TestRule enclosedRule) {
@@ -133,7 +166,11 @@ public class KoPeMeRuleChain extends KoPeMeRuleParameters {
 		innerChain.addAll(innerRules);
 		middleChain.addAll(middleRules);
 		outerChain.addAll(outerRules);
-		return new KoPeMeRuleChain(outerChain, middleChain, innerChain, getTestObject(), measuredChain);
+		return new KoPeMeRuleChain(outerChain, middleChain, innerChain, getTestObject(), getCollectors(), measuredChain);
+	}
+
+	public KoPeMeRuleChain koPeMeParameters(final Object test, final DataCollectorList collectors) {
+		return new KoPeMeRuleChain(outerRules, new ArrayList<TestRule>(), new ArrayList<TestRule>(), test, collectors);
 	}
 
 	/**
@@ -145,11 +182,22 @@ public class KoPeMeRuleChain extends KoPeMeRuleParameters {
 	 * @return a new {@code KoPeMeRuleChain} with the point of performance measurement set innermost.
 	 */
 	public KoPeMeRuleChain koPeMeParameters(final Object test) {
-		return new KoPeMeRuleChain(outerRules, new ArrayList<TestRule>(), new ArrayList<TestRule>(), test);
+		return new KoPeMeRuleChain(outerRules, new ArrayList<TestRule>(), new ArrayList<TestRule>(), test, getCollectors());
+	}
+
+	public KoPeMeRuleChain koPeMe(final Object test, final DataCollectorList collectors) {
+		return new KoPeMeRuleChain(outerRules, innerRules, new ArrayList<TestRule>(), test, collectors);
 	}
 
 	public KoPeMeRuleChain koPeMe(final Object test) {
-		return new KoPeMeRuleChain(outerRules, innerRules, new ArrayList<TestRule>(), test);
+		return new KoPeMeRuleChain(outerRules, innerRules, new ArrayList<TestRule>(), test, getCollectors());
+	}
+
+	public KoPeMeRuleChain koPeMe() {
+		if (getTestObject() == null) {
+			throw new RuntimeException("No testObject predefined!");
+		}
+		return new KoPeMeRuleChain(outerRules, innerRules, new ArrayList<TestRule>(), getTestObject(), getCollectors());
 	}
 
 	/**
@@ -160,7 +208,7 @@ public class KoPeMeRuleChain extends KoPeMeRuleParameters {
 		Statement chainStatement;
 		if (getTestObject() != null) {
 			try {
-				chainStatement = new KoPeMeChainStatement(base, description, getTestObject(), isParameters);
+				chainStatement = new KoPeMeChainStatement(base, description, getTestObject(), getCollectors(), isParameters);
 			} catch (final Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -216,8 +264,8 @@ public class KoPeMeRuleChain extends KoPeMeRuleParameters {
 	public class KoPeMeChainStatement extends KoPeMeParametersStatement {
 
 		public KoPeMeChainStatement(final Statement base, final Description description, final Object testObject,
-				final boolean isParameters) throws Exception {
-			super(base, description, testObject);
+				final DataCollectorList collectors, final boolean isParameters) throws Exception {
+			super(base, description, testObject, collectors);
 		}
 
 		@Override

@@ -15,6 +15,8 @@ import org.apache.logging.log4j.Logger;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import de.dagere.kopeme.datacollection.DataCollectorList;
+
 /**
  * TestRule for realizing advanced parameterized performance measurements. Uses the <code>Parameters<code> and
  * <code>Parameter<code> Annotations resembling those of the Parameters runner, additionally an alternative
@@ -85,8 +87,25 @@ public class KoPeMeRuleParameters extends KoPeMeRule {
 	private final Field[] parameterFields;
 	private final Parameters ann;
 
-	public KoPeMeRuleParameters(final Object test) {
-		super(test);
+	public KoPeMeRuleParameters(final Object testObject) {
+		super(testObject);
+		if (getTestObject() != null) {
+			try {
+				parametersMethod = fetchParametersMethod();
+				parameterFields = fetchParameterFields();
+				ann = fetchParametersAnnotation();
+			} catch (final NoParameterException e) {
+				throw new RuntimeException(e);
+			}
+		} else {
+			parametersMethod = null;
+			parameterFields = null;
+			ann = null;
+		}
+	}
+
+	public KoPeMeRuleParameters(final Object testObject, final DataCollectorList collectors) {
+		super(testObject, collectors);
 		if (getTestObject() != null) {
 			try {
 				parametersMethod = fetchParametersMethod();
@@ -105,7 +124,7 @@ public class KoPeMeRuleParameters extends KoPeMeRule {
 	@Override
 	public Statement apply(final Statement base, final Description description) {
 		try {
-			return new KoPeMeParametersStatement(base, description, getTestObject());
+			return new KoPeMeParametersStatement(base, description, getTestObject(), getCollectors());
 		} catch (final Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -167,8 +186,9 @@ public class KoPeMeRuleParameters extends KoPeMeRule {
 
 	public class KoPeMeParametersStatement extends KoPeMeBasicStatement {
 
-		protected KoPeMeParametersStatement(final Statement base, final Description description, final Object testObject) throws Exception {
-			super(base, description, testObject);
+		protected KoPeMeParametersStatement(final Statement base, final Description description, final Object testObject,
+				final DataCollectorList collectors) throws Exception {
+			super(base, description, testObject, collectors);
 		}
 
 		@Override

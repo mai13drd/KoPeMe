@@ -20,21 +20,22 @@ import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 
 import de.dagere.kopeme.annotations.PerformanceTest;
+import de.dagere.kopeme.datacollection.DataCollectorList;
 import de.dagere.kopeme.junit.rule.KoPeMeRuleChain;
 import de.dagere.kopeme.junit.rule.KoPeMeRuleParameters;
 import de.dagere.kopeme.junit.rule.annotations.AfterNoMeasurement;
 import de.dagere.kopeme.junit.rule.annotations.BeforeNoMeasurement;
 
-public class ExampleRuleChainRelativeBoundaryParametersTest {
+public class ExampleRuleChainTest {
 
-	private static final Logger LOG = LogManager.getLogger(ExampleRuleChainRelativeBoundaryParametersTest.class);
+	private static final Logger LOG = LogManager.getLogger(ExampleRuleChainTest.class);
 
 	private TemporaryFolder folder;
 	private Path file;
 	private TestName name;
 
 	/**
-	 * This is an example of a KoPeMeUleChain where all levels to define Rules are used. <br>
+	 * This is an example of a KoPeMeRuleChain where all levels to define Rules are used. <br>
 	 * The {@code outerRule(TestRule)} (and any {@code around(TestRule)} called before
 	 * {@code koPeMeParameters(testObject)}) will be called only once for every test method, here for example only one
 	 * {@code TemporaryFolder} object will be built for the {@code testKoPeMeChainRuleExample}. Of course it is possible
@@ -53,14 +54,14 @@ public class ExampleRuleChainRelativeBoundaryParametersTest {
 	@Rule
 	public TestRule perform = KoPeMeRuleChain
 			.outerRule(folder = new TemporaryFolder())
-			.koPeMeParameters(this)
+			.koPeMeParameters(this, DataCollectorList.ONLYTIME)
 			.around(new ExternalResource() {
 				@Override
 				protected void before() throws Throwable {
 					file = folder.newFile().toPath();
 				}
 			})
-			.koPeMe(this)
+			.koPeMe()
 			.around(name = new TestName())
 			.measure(new ExternalResource() {
 				@Override
@@ -73,7 +74,7 @@ public class ExampleRuleChainRelativeBoundaryParametersTest {
 	public void getTempFile() {
 		try (BufferedWriter writer = Files.newBufferedWriter(file, StandardOpenOption.APPEND)) {
 			writer.append("Method: " + name.getMethodName())
-					.append(", waiting time in millis: " + waiting);
+					.append(", waiting: " + waiting);
 		} catch (final IOException e1) {
 			e1.printStackTrace();
 		}
@@ -84,7 +85,7 @@ public class ExampleRuleChainRelativeBoundaryParametersTest {
 		try {
 			final Iterator<Path> fileIterator = Files.list(file.getParent()).iterator();
 			while (fileIterator.hasNext()) {
-				LOG.info("Content of temporary Files: {}", new String(Files.readAllBytes(fileIterator.next())));
+				LOG.info(" Content: {}", new String(Files.readAllBytes(fileIterator.next())));
 			}
 		} catch (final IOException e) {
 			e.printStackTrace();

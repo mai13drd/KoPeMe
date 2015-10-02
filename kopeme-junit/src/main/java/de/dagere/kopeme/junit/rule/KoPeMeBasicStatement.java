@@ -15,6 +15,7 @@ import de.dagere.kopeme.PerformanceTestUtils;
 import de.dagere.kopeme.annotations.Assertion;
 import de.dagere.kopeme.annotations.MaximalRelativeStandardDeviation;
 import de.dagere.kopeme.annotations.PerformanceTest;
+import de.dagere.kopeme.datacollection.DataCollectorList;
 import de.dagere.kopeme.datacollection.TestResult;
 import de.dagere.kopeme.datastorage.SaveableTestData;
 import de.dagere.kopeme.kieker.KoPeMeKiekerSupport;
@@ -32,6 +33,7 @@ public class KoPeMeBasicStatement extends Statement {
 	protected final Statement base;
 	protected final Description description;
 	private final Object testObject;
+	private final DataCollectorList collectors;
 
 	protected Map<String, Double> maximumRelativeStandardDeviation;
 	protected Map<String, Long> assertationvalues;
@@ -44,14 +46,15 @@ public class KoPeMeBasicStatement extends Statement {
 	/**
 	 * Initializes the KoPemeBasicStatement.
 	 *
+	 * @param collectors
 	 * @param runnables Runnables that should be run
 	 * @param method Method that should be executed
 	 * @param filename Name of the
 	 * @throws Exception If no {@literal @}PerformanceTest Annotation is present
 	 */
-	public KoPeMeBasicStatement(final Statement base, final Description description, final Object testObject)
-			throws Exception {
-		super();
+	public KoPeMeBasicStatement(final Statement base, final Description description, final Object testObject,
+			final DataCollectorList collectors) throws Exception {
+		this.collectors = collectors;
 		this.base = applyMeasuredRules(base, description);
 		this.description = description;
 		this.testObject = testObject;
@@ -62,6 +65,34 @@ public class KoPeMeBasicStatement extends Statement {
 
 		annotation = method.getAnnotation(PerformanceTest.class);
 
+		getAnnotatedData();
+	}
+
+	/**
+	 * Initializes the KoPemeBasicStatement.
+	 *
+	 * @param collectors
+	 * @param runnables Runnables that should be run
+	 * @param method Method that should be executed
+	 * @param filename Name of the
+	 * @throws Exception If no {@literal @}PerformanceTest Annotation is present
+	 */
+	public KoPeMeBasicStatement(final Statement base, final Description description, final Object testObject) throws Exception {
+		this.collectors = DataCollectorList.STANDARD;
+		this.base = applyMeasuredRules(base, description);
+		this.description = description;
+		this.testObject = testObject;
+		final Class<?> testClass = testObject.getClass();
+		this.method = acquireMethod(description.getMethodName(), testClass);
+		this.runnables = new TestRunnables(testClass, testObject);
+		this.filename = testClass.getName() + ".yaml";
+
+		annotation = method.getAnnotation(PerformanceTest.class);
+
+		getAnnotatedData();
+	}
+
+	protected void getAnnotatedData() throws Exception {
 		if (annotation != null) {
 			try {
 				KoPeMeKiekerSupport.INSTANCE.useKieker(annotation.useKieker(), filename, method.getName());
@@ -104,7 +135,7 @@ public class KoPeMeBasicStatement extends Statement {
 		final Thread mainThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				testResult = new TestResult(method.getName(), annotation.executionTimes());
+				testResult = new TestResult(method.getName(), annotation.executionTimes(), collectors);
 				checkCollectorValidity();
 				try {
 					runWarmup();
@@ -247,5 +278,9 @@ public class KoPeMeBasicStatement extends Statement {
 
 	public Object getTestObject() {
 		return testObject;
+	}
+
+	public DataCollectorList getCollectors() {
+		return collectors;
 	}
 }

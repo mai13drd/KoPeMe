@@ -15,14 +15,14 @@ public abstract class SaveableTestData {
 			this.type = type;
 		}
 
-		public T createTestData(final File folder, final String testcasename, final String filename, final TestResult tr, final int warmup, final boolean saveValues) {
+		public T createTestData(final File folder, final String testcasename, final String filename, final TestResult testResult, final int warmup, final boolean saveValues) {
 			T returnable;
 			try {
 				returnable = type.newInstance();
 				returnable.setFolder(folder);
 				returnable.setTestcasename(testcasename);
 				returnable.setFilename(filename);
-				returnable.setTr(tr);
+				returnable.setTestResult(testResult);
 				returnable.setSaveValues(saveValues);
 				returnable.setWarmupExecutions(warmup);
 				return returnable;
@@ -42,34 +42,34 @@ public abstract class SaveableTestData {
 		return folder;
 	}
 
-	public static AssertFailureTestData createAssertFailedTestData(final String testcasename, final String filename, final TestResult tr, final int warmupExecutions,
+	public static AssertFailureTestData createAssertFailedTestData(final String testcasename, final String filename, final TestResult testResult, final int warmupExecutions,
 			final boolean saveValues) {
-		return createAssertFailedTestData(createDefaultFolder(filename), testcasename, filename, tr, warmupExecutions, saveValues);
+		return createAssertFailedTestData(createDefaultFolder(filename), testcasename, filename, testResult, warmupExecutions, saveValues);
 	}
 
-	public static TestErrorTestData createErrorTestData(final String testcasename, final String filename, final TestResult tr, final int warmupExecutions, final boolean saveValues) {
-		return createErrorTestData(createDefaultFolder(filename), testcasename, filename, tr, warmupExecutions, saveValues);
+	public static TestErrorTestData createErrorTestData(final String testcasename, final String filename, final TestResult testResult, final int warmupExecutions, final boolean saveValues) {
+		return createErrorTestData(createDefaultFolder(filename), testcasename, filename, testResult, warmupExecutions, saveValues);
 	}
 
-	public static FineTestData createFineTestData(final File folder, final String testcasename, final String filename, final TestResult tr, final int warmupExecutions,
+	public static FineTestData createFineTestData(final File folder, final String testcasename, final String filename, final TestResult testResult, final int warmupExecutions,
 			final boolean saveValues) {
-		return new SaveableTestDataFactory<>(FineTestData.class).createTestData(folder, testcasename, filename, tr, warmupExecutions, saveValues);
+		return new SaveableTestDataFactory<>(FineTestData.class).createTestData(folder, testcasename, filename, testResult, warmupExecutions, saveValues);
 	}
 
-	public static AssertFailureTestData createAssertFailedTestData(final File folder, final String testcasename, final String filename, final TestResult tr,
+	public static AssertFailureTestData createAssertFailedTestData(final File folder, final String testcasename, final String filename, final TestResult testResult,
 			final int warmupExecutions,
 			final boolean saveValues) {
-		return new SaveableTestDataFactory<>(AssertFailureTestData.class).createTestData(folder, testcasename, filename, tr, warmupExecutions, saveValues);
+		return new SaveableTestDataFactory<>(AssertFailureTestData.class).createTestData(folder, testcasename, filename, testResult, warmupExecutions, saveValues);
 	}
 
-	public static TestErrorTestData createErrorTestData(final File folder, final String testcasename, final String filename, final TestResult tr, final int warmupExecutions,
+	public static TestErrorTestData createErrorTestData(final File folder, final String testcasename, final String filename, final TestResult testResult, final int warmupExecutions,
 			final boolean saveValues) {
-		return new SaveableTestDataFactory<>(TestErrorTestData.class).createTestData(folder, testcasename, filename, tr, warmupExecutions, saveValues);
+		return new SaveableTestDataFactory<>(TestErrorTestData.class).createTestData(folder, testcasename, filename, testResult, warmupExecutions, saveValues);
 	}
 
 	private File folder;
 	private String testcasename, filename;
-	private TestResult tr;
+	private TestResult testResult;
 	private int warmupExecutions;
 
 	/**
@@ -121,12 +121,12 @@ public abstract class SaveableTestData {
 		this.filename = filename;
 	}
 
-	public TestResult getTr() {
-		return tr;
+	public TestResult getTestResult() {
+		return testResult;
 	}
 
-	public void setTr(final TestResult tr) {
-		this.tr = tr;
+	public void setTestResult(final TestResult testResult) {
+		this.testResult = testResult;
 	}
 
 	public boolean isSaveValues() {

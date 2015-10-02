@@ -86,24 +86,24 @@ public final class PerformanceTestUtils {
 				f.mkdirs();
 			}
 			DataStorer xds = new XMLDataStorer(f, data.getFilename(), testcasename);
-			TestResult tr = data.getTr();
-			for (String key : tr.getKeys()) {
+			TestResult testResult = data.getTestResult();
+			for (String key : testResult.getKeys()) {
 				LOG.trace("Key: " + key);
-				double relativeStandardDeviation = tr.getRelativeStandardDeviation(key);
-				long value = tr.getValue(key);
-				long min = tr.getMinumumCurrentValue(key);
-				long max = tr.getMaximumCurrentValue(key);
-				double first10percentile = getPercentile(tr.getValues(key), 10);
+				double relativeStandardDeviation = testResult.getRelativeStandardDeviation(key);
+				long value = testResult.getValue(key);
+				long min = testResult.getMinumumCurrentValue(key);
+				long max = testResult.getMaximumCurrentValue(key);
+				double first10percentile = getPercentile(testResult.getValues(key), 10);
 				PerformanceDataMeasure performanceDataMeasure = new PerformanceDataMeasure(testcasename, key, value, relativeStandardDeviation,
-						tr.getRealExecutions(), data.getWarmupExecutions(), min, max, first10percentile);
-				List<Long> values = data.isSaveValues() ? tr.getValues(key) : null;
+						testResult.getRealExecutions(), data.getWarmupExecutions(), min, max, first10percentile);
+				List<Long> values = data.isSaveValues() ? testResult.getValues(key) : null;
 				xds.storeValue(performanceDataMeasure, values);
 				// xds.storeValue(s, getValue(s));
 				LOG.trace("{}: {}, (rel. Standardabweichung: {})", key, value, relativeStandardDeviation);
 			}
-			for (String additionalKey : tr.getAdditionValueKeys()) {
-				PerformanceDataMeasure performanceDataMeasure = new PerformanceDataMeasure(testcasename, additionalKey, tr.getValue(additionalKey), 0.0,
-						tr.getRealExecutions(), data.getWarmupExecutions(), tr.getValue(additionalKey), tr.getValue(additionalKey), tr.getValue(additionalKey));
+			for (String additionalKey : testResult.getAdditionValueKeys()) {
+				PerformanceDataMeasure performanceDataMeasure = new PerformanceDataMeasure(testcasename, additionalKey, testResult.getValue(additionalKey), 0.0,
+						testResult.getRealExecutions(), data.getWarmupExecutions(), testResult.getValue(additionalKey), testResult.getValue(additionalKey), testResult.getValue(additionalKey));
 				List<Long> vales = new LinkedList<Long>();
 				xds.storeValue(performanceDataMeasure, vales);
 			}

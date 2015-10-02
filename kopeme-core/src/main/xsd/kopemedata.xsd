@@ -17,7 +17,7 @@
 							<xs:element name="testcase" type="testcaseType"
 								maxOccurs="unbounded" />
 						</xs:sequence>
-						<xs:attribute name="class"/>
+						<xs:attribute name="class" />
 					</xs:complexType>
 				</xs:element>
 			</xs:sequence>
@@ -34,46 +34,71 @@
 		<xs:sequence>
 			<xs:element name="datacollector" maxOccurs="unbounded">
 				<xs:complexType>
-					<xs:sequence>
-						<xs:element name="result" maxOccurs="unbounded">
-							<xs:complexType>
-								<xs:sequence>
-									<xs:element name="value" type="xs:string" />
-									<xs:element name="deviation" type="xs:double" />
-									<xs:element name="warmupExecutions" type="xs:long"/>
-									<xs:element name="executionTimes" type="xs:long"/>
-									<xs:element name="version" type="versioninfo"/>
-									<xs:element name="min" type="xs:long"/>
-									<xs:element name="max" type="xs:long"/>
-									<xs:element name="first10percentile" type="xs:double"/>
-									<xs:element name="stacktrace" type="xs:string"/>
-									<xs:element name="fulldata" minOccurs="0" maxOccurs="1">
-										<xs:complexType>
-											<xs:sequence minOccurs="1" maxOccurs="unbounded">
-												<xs:element name="value" type="xs:string" />
-											</xs:sequence>
-										</xs:complexType>
-									</xs:element>
-								</xs:sequence>
-								<xs:attribute name="configuration" />
-								<xs:attribute name="date" type="xs:long" />
-								<xs:attribute name="failure" type="xs:boolean"/>
-								<xs:attribute name="error" type="xs:boolean"/>
-								<xs:attribute name="cputemperature" type="xs:long"/>
-							</xs:complexType>
-						</xs:element>
-					</xs:sequence>
+					<xs:choice>
+						<xs:sequence>
+							<xs:element name="parametersresult" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="bestperformance" type="result"/>
+										<xs:element name="heaviestperformance" type="result" minOccurs="0"/>
+										<xs:element name="bestweightedperformance" type="result" minOccurs="0"/>
+										<xs:element name="heaviestweightedperformance" type="result" minOccurs="0"/>
+										<xs:element name="terminatingcondition" type="xs:string"/>
+										<xs:element name="boundarybreakingperformance" type="result" minOccurs="0"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:sequence>
+							<xs:element name="result" maxOccurs="unbounded" type="result"/>
+						</xs:sequence>
+					</xs:choice> 
 					<xs:attribute name="name" />
 				</xs:complexType>
 			</xs:element>
 		</xs:sequence>
 		<xs:attribute name="name" type="xs:string" />
 	</xs:complexType>
+	<xs:complexType name="result">
+		<xs:sequence>
+			<xs:element name="parameter" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="weight" type="xs:int" minOccurs="0"/>
+						<xs:element name="parametername" type="xs:string" />
+						<xs:element name="type" type="xs:string" />
+						<xs:element name="value" type="xs:anySimpleType" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="value" type="xs:string" />
+			<xs:element name="deviation" type="xs:double" />
+			<xs:element name="warmupExecutions" type="xs:long" />
+			<xs:element name="executionTimes" type="xs:long" />
+			<xs:element name="version" type="versioninfo" />
+			<xs:element name="min" type="xs:long" />
+			<xs:element name="max" type="xs:long" />
+			<xs:element name="first10percentile" type="xs:double" />
+			<xs:element name="stacktrace" type="xs:string" />
+			<xs:element name="fulldata" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence minOccurs="1" maxOccurs="unbounded">
+						<xs:element name="value" type="xs:string" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="configuration" />
+		<xs:attribute name="date" type="xs:long" />
+		<xs:attribute name="failure" type="xs:boolean" />
+		<xs:attribute name="error" type="xs:boolean" />
+		<xs:attribute name="cputemperature" type="xs:long" />
+	</xs:complexType>
 	<xs:complexType name="versioninfo">
 		<xs:choice>
-			<xs:element name="gitversion" type="xs:string"/>
-			<xs:element name="committer" type="xs:string"/>
-			<xs:element name="time" type="xs:long"/>
+			<xs:element name="gitversion" type="xs:string" />
+			<xs:element name="committer" type="xs:string" />
+			<xs:element name="time" type="xs:long" />
 		</xs:choice>
 	</xs:complexType>
 </xs:schema>

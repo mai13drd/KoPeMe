@@ -37,7 +37,7 @@ public class TestSaveableTestData {
 	private void assertValuesSet(final SaveableTestData data) {
 		assertEquals(RESULT_FILENAME, data.getFilename());
 		assertEquals(new File(THIS_DIR), data.getFolder());
-		assertEquals(COMPLEX, data.getTr());
+		assertEquals(COMPLEX, data.getTestResult());
 		assertEquals(SAVE_VALUES, data.isSaveValues());
 		assertEquals(MY_TEST_CASE_NAME, data.getTestcasename());
 	}
