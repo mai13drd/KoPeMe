@@ -19,6 +19,8 @@ import org.hamcrest.Matchers;
 import org.junit.Assert;
 
 import de.dagere.kopeme.Checker;
+import de.dagere.kopeme.datacollection.consumption.DataConsumer;
+import de.dagere.kopeme.datacollection.consumption.LocalDataConsumer;
 import de.dagere.kopeme.measuresummarizing.AverageSummerizer;
 import de.dagere.kopeme.measuresummarizing.MeasureSummarizer;
 
@@ -33,13 +35,13 @@ public class TestResult {
 
 	protected Map<String, Long> values = new HashMap<>();
 	protected Map<String, DataCollector> dataCollectors;
-	protected List<Map<String, Long>> realValues;
 	protected List<Long> executionStartTimes = new LinkedList<>();
 	protected int index = 0;
 	protected Checker checker;
 	private int realExecutions;
 	private String methodName;
 	private final HistoricalTestResults historicalResults;
+	private final DataConsumer consumer;
 
 	private final Map<String, MeasureSummarizer> collectorSummarizerMap;
 
@@ -50,7 +52,7 @@ public class TestResult {
 	 * @param executionTimes Count of the planned executions
 	 */
 	public TestResult(final String methodName, final int executionTimes, final DataCollectorList collectors) {
-		realValues = new ArrayList<>(executionTimes + 1);
+		consumer = new LocalDataConsumer(executionTimes);
 		this.methodName = methodName;
 		historicalResults = new HistoricalTestResults(methodName);
 
@@ -100,11 +102,8 @@ public class TestResult {
 		for (final DataCollector dc : dataCollectors.values()) {
 			keySet.add(dc.getName());
 		}
+		keySet.addAll(consumer.getKeys());
 
-		for (int i = 0; i < realValues.size(); i++) {
-			if (realValues.get(i) != null)
-				keySet.addAll(realValues.get(i).keySet());
-		}
 		return keySet;
 	}
 
@@ -189,6 +188,8 @@ public class TestResult {
 	 * values and historical data is not possible. For this, call finalizeCollection.
 	 */
 	public void stopCollection() {
+//		if 
+		
 		final Map<String, Long> runData = new HashMap<>();
 		for (final DataCollector dc : dataCollectors.values()) {
 			dc.stopCollection();
@@ -196,7 +197,8 @@ public class TestResult {
 		for (final DataCollector dc : dataCollectors.values()) {
 			runData.put(dc.getName(), dc.getValue());
 		}
-		realValues.add(runData);
+		consumer.addData(runData);
+//		realValues.add(runData);
 		index++;
 	}
 
@@ -215,17 +217,15 @@ public class TestResult {
 	 * are possible
 	 */
 	public void finalizeCollection() {
-		if (executionStartTimes.size() != realValues.size()) {
-			throw new RuntimeException("Count of executions is wrong, expected: " + executionStartTimes + " but got " + realValues.size());
+		if (executionStartTimes.size() != consumer.getDataCount()) {
+			throw new RuntimeException("Count of executions is wrong, expected: " + executionStartTimes + " but got " + consumer.getDataCount());
 		}
 		final AverageSummerizer as = new AverageSummerizer();
 		for (final String collectorName : getKeys()) {
 			LOG.trace("Standardabweichung {}: {}", collectorName, getRelativeStandardDeviation(collectorName));
 			final List<Long> localValues = new LinkedList<>();
-			for (int i = 0; i < realValues.size() - 1; i++) {
-				// log.debug("I: " + i+ " Value: " +
-				// realValues.get(i).get(collectorName));
-				localValues.add(realValues.get(i).get(collectorName));
+			for (Long value : consumer.getValues(collectorName)){
+				localValues.add(value);
 			}
 			Long result;
 			if (collectorSummarizerMap.containsKey(collectorName)) {
@@ -261,20 +261,16 @@ public class TestResult {
 	}
 
 	/**
-	 * Gets the current value of the measurement.
+	 * Gets the current average value of the measurement.
 	 * 
 	 * @param name Name of the measure
 	 * @return Value of the measure
 	 */
-	public long getValue(final String key) {
+	public double getValue(final String key) {
 		if (values.get(key) != null) {
 			return values.get(key);
 		} else {
-			long avg = 0;
-			for (int i = 0; i < realValues.size(); i++) {
-				avg += realValues.get(i).get(key);
-			}
-			return realValues.size() > 0 ? avg / realValues.size() : Long.MAX_VALUE;
+			return consumer.getAverageCurrentValue(key);
 		}
 	}
 
@@ -285,21 +281,7 @@ public class TestResult {
 	 * @return Relative standard deviation
 	 */
 	public double getRelativeStandardDeviation(final String datacollector) {
-		final long[] currentValues = new long[realValues.size()];
-		for (int i = 0; i < realValues.size(); i++) {
-			final Map<String, Long> map = realValues.get(i);
-			currentValues[i] = map.get(datacollector);
-		}
-		if (datacollector.equals("de.kopeme.datacollection.CPUUsageCollector") || datacollector.equals("de.kopeme.datacollection.TimeDataCollector")) {
-			LOG.trace(Arrays.toString(currentValues));
-		}
-		final SummaryStatistics st = new SummaryStatistics();
-		for (final Long l : currentValues) {
-			st.addValue(l);
-		}
-
-		LOG.trace("Mittel: {} Standardabweichung: {}", st.getMean(), st.getStandardDeviation());
-		return st.getStandardDeviation() / st.getMean();
+		return consumer.getRelativeStandardDeviation(datacollector);
 	}
 
 	/**
@@ -334,13 +316,7 @@ public class TestResult {
 	 * @return Minimum of the currently measured values
 	 */
 	public long getMinumumCurrentValue(final String key) {
-		long min = Long.MAX_VALUE;
-		for (int i = 0; i < realValues.size(); i++) {
-			if (realValues.get(i).get(key) < min)
-				min = realValues.get(i).get(key);
-		}
-		LOG.trace("Minimum ermittelt: " + min);
-		return min;
+		return consumer.getMinimumCurrentValue(key);
 	}
 
 	/**
@@ -350,13 +326,7 @@ public class TestResult {
 	 * @return Maximum of the currently measured values
 	 */
 	public long getMaximumCurrentValue(final String key) {
-		long max = 0;
-		for (int i = 0; i < realValues.size(); i++) {
-			if (realValues.get(i).get(key) > max)
-				max = realValues.get(i).get(key);
-		}
-		LOG.trace("Maximum ermittelt: " + max);
-		return max;
+		return consumer.getMaximumCurrentValue(key);
 	}
 
 	/**
@@ -367,24 +337,11 @@ public class TestResult {
 	 */
 	public Map<Long, Long> getValues(final String key) {
 		final Map<Long, Long> currentValues = new LinkedHashMap<>();
-		for (int i = 0; i < realValues.size(); i++) {
-			currentValues.put(executionStartTimes.get(i), realValues.get(i).get(key));
+		List<Long> values = consumer.getValues(key);
+		for (int i = 0; i < values.size(); i++) {
+			currentValues.put(executionStartTimes.get(i), values.get(i));
 		}
 		return currentValues;
-	}
-
-	public void setValues(final String key, final List<Long> currentValues) {
-		if (currentValues.size() > realValues.size()) {
-			throw new RuntimeException("Internal Error: Count of new values should not exceed count of executions");
-		}
-		for (int i = 0; i < realValues.size(); i++) {
-			final Map<String, Long> currentEntry = realValues.get(i);
-			if (currentValues.size() > i) {
-				currentEntry.put(key, currentValues.get(i));
-			} else {
-				currentEntry.remove(i);
-			}
-		}
 	}
 
 	/**

@@ -97,19 +97,18 @@ public final class PerformanceTestUtils {
 			}
 			final DataStorer xds = new XMLDataStorer(f, data.getFilename(), testcasename);
 			final TestResult tr = data.getTr();
-			final long timeValue = tr.getValue(TimeDataCollector.class.getName());
+			final double timeValue = tr.getValue(TimeDataCollector.class.getName());
 			if (timeValue != 0){
 				LOG.info("Execution Time: {}", timeValue);
 			}
 			for (final String key : tr.getKeys()) {
 				LOG.trace("Collector Key: {}", key);
 				final double relativeStandardDeviation = tr.getRelativeStandardDeviation(key);
-				final long value = tr.getValue(key);
+				final double value = tr.getValue(key);
 				final long min = tr.getMinumumCurrentValue(key);
 				final long max = tr.getMaximumCurrentValue(key);
-				final double first10percentile = getPercentile(tr.getValues(key).values(), 10);
 				final PerformanceDataMeasure performanceDataMeasure = new PerformanceDataMeasure(testcasename, key, value, relativeStandardDeviation,
-						tr.getRealExecutions(), data.getWarmupExecutions(), min, max, first10percentile);
+						tr.getRealExecutions(), data.getWarmupExecutions(), min, max);
 				final Map<Long, Long> values = data.isSaveValues() ? tr.getValues(key) : null;
 				xds.storeValue(performanceDataMeasure, values);
 				// xds.storeValue(s, getValue(s));
@@ -118,7 +117,7 @@ public final class PerformanceTestUtils {
 			for (final String additionalKey : tr.getAdditionValueKeys()) {
 				if (!tr.getKeys().contains(additionalKey)) {
 					final PerformanceDataMeasure performanceDataMeasure = new PerformanceDataMeasure(testcasename, additionalKey, tr.getValue(additionalKey), 0.0,
-							tr.getRealExecutions(), data.getWarmupExecutions(), tr.getValue(additionalKey), tr.getValue(additionalKey), tr.getValue(additionalKey));
+							tr.getRealExecutions(), data.getWarmupExecutions(), (long)tr.getValue(additionalKey),(long) tr.getValue(additionalKey));
 					final Map<Long, Long> values = data.isSaveValues() ? tr.getValues(additionalKey) : null;
 					xds.storeValue(performanceDataMeasure, values);
 				}

@@ -9,11 +9,10 @@ package de.dagere.kopeme.datastorage;
 public class PerformanceDataMeasure {
 	public final String testcase;
 	public final String collectorname;
-	public final long value;
+	public final double value;
 	public final double deviation;
 	public final int executionTimes, warmupExecutions;
 	public final long min, max;
-	public final double first10percentile;
 	public final boolean failure, error;
 
 	/**
@@ -28,12 +27,11 @@ public class PerformanceDataMeasure {
 	 * @param max maximum value
 	 * @param first10percentile First 10-Percentil of the measured values
 	 */
-	public PerformanceDataMeasure(final String testcase, final String collectorname, final long value, final double deviation,
+	public PerformanceDataMeasure(final String testcase, final String collectorname, final double value, final double deviation,
 			final int executionTimes,
 			final int warmupExecutions,
 			final long min,
-			final long max,
-			final double first10percentile) {
+			final long max) {
 		this.testcase = testcase;
 		this.collectorname = collectorname;
 		this.value = value;
@@ -42,7 +40,6 @@ public class PerformanceDataMeasure {
 		this.warmupExecutions = warmupExecutions;
 		this.min = min;
 		this.max = max;
-		this.first10percentile = first10percentile;
 		error = false;
 		failure = false;
 	}
@@ -74,7 +71,6 @@ public class PerformanceDataMeasure {
 		this.warmupExecutions = warmupExecutions;
 		this.min = min;
 		this.max = max;
-		first10percentile = 10.0;
 		this.failure = failure;
 		this.error = error;
 	}
@@ -96,7 +92,7 @@ public class PerformanceDataMeasure {
 	/**
 	 * @return the value
 	 */
-	public long getValue() {
+	public double getValue() {
 		return value;
 	}
 
@@ -130,13 +126,6 @@ public class PerformanceDataMeasure {
 	 */
 	public long getMax() {
 		return max;
-	}
-
-	/**
-	 * @return the first10percentile
-	 */
-	public double getFirst10percentile() {
-		return first10percentile;
 	}
 
 	/**

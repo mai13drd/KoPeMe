@@ -81,6 +81,13 @@ public @interface PerformanceTest {
 	String dataCollectors() default "STANDARD";
 	
 	/**
+	 * Sets the destination of the data - default is XML, possible is also ELASTIC
+	 * 
+	 * @return Destination where data should be saved to
+	 */
+	String destination() default "XML";
+	
+	/**
 	 * Optionally specify for <emph>all<emph> datacollectors, for which maximal standard deviation an early stop is executed. This means that, if all relative
 	 * standard deviations fall below the given maximale relative deviations thresholds, the test is stoped and the measured value until the stop is the final
 	 * result.

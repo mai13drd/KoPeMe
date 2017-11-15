@@ -65,6 +65,8 @@ public class PerformanceTestRunner {
 			for (final Assertion a : annotation.assertions()) {
 				assertationvalues.put(a.collectorname(), a.maxvalue());
 			}
+			
+//			annotation.destination()
 		}
 
 		filename = klasse.getName();

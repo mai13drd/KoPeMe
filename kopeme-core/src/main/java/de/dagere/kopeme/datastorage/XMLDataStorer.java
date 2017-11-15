@@ -84,7 +84,6 @@ public final class XMLDataStorer implements DataStorer {
 		r.setWarmupExecutions(performanceDataMeasure.getWarmupExecutions());
 		r.setMax(performanceDataMeasure.max);
 		r.setMin(performanceDataMeasure.min);
-		r.setFirst10Percentile(performanceDataMeasure.first10percentile);
 		if (values != null) {
 			final Fulldata fd = new Fulldata();
 			for (final Map.Entry<Long, Long> valueEntry : values.entrySet()) {

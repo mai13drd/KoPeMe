@@ -315,27 +315,27 @@ public abstract class KoPeMeStaticRigorTestcase extends TestCase {
 		}
 		LOG.debug("Executions: " + (executions - 1));
 		tr.setRealExecutions(executions - 1);
-		for (String collector : tr.getKeys()) {
-			List<Long> values = new ArrayList<>(tr.getValues(collector).values());
-			EmpiricalDistribution distribution = getDistribution(values);
-			Set<Long> outliers = new HashSet<>();
-			for (long measurement : values) {
-				try {
-					double cdfValue = distribution.cumulativeProbability(measurement);
-					final boolean isOutlier = cdfValue > CDF_BOUNDARY;
-					if (isOutlier) {
-						outliers.add(measurement);
-					}
-				} catch (NotStrictlyPositiveException ne) {
-					LOG.debug("Harter Ausreißer: " + measurement);
-				}
-
-			}
-			for (long outlier : outliers) {
-				values.remove(outlier);
-			}
-			tr.setValues(collector, values);
-		}
+//		for (String collector : tr.getKeys()) {
+//			List<Long> values = new ArrayList<>(tr.getValues(collector).values());
+//			EmpiricalDistribution distribution = getDistribution(values);
+//			Set<Long> outliers = new HashSet<>();
+//			for (long measurement : values) {
+//				try {
+//					double cdfValue = distribution.cumulativeProbability(measurement);
+//					final boolean isOutlier = cdfValue > CDF_BOUNDARY;
+//					if (isOutlier) {
+//						outliers.add(measurement);
+//					}
+//				} catch (NotStrictlyPositiveException ne) {
+//					LOG.debug("Harter Ausreißer: " + measurement);
+//				}
+//
+//			}
+//			for (long outlier : outliers) {
+//				values.remove(outlier);
+//			}
+//			tr.setValues(collector, values);
+//		}
 	}
 
 	private EmpiricalDistribution getDistribution(final Collection<Long> listValues) {
