@@ -25,6 +25,7 @@ import de.dagere.kopeme.annotations.PerformanceTestingClass;
 import de.dagere.kopeme.datacollection.DataCollectorList;
 import de.dagere.kopeme.datacollection.TestResult;
 import de.dagere.kopeme.datacollection.TimeDataCollector;
+import de.dagere.kopeme.datacollection.consumption.Destination;
 import de.dagere.kopeme.datastorage.SaveableTestData;
 import de.dagere.kopeme.kieker.KoPeMeKiekerSupport;
 
@@ -125,7 +126,7 @@ public abstract class KoPeMeStaticRigorTestcase extends TestCase {
 		final int timeoutTime = getMaximalTime();
 
 		String testClassName = this.getClass().getName();
-		final TestResult tr = new TestResult(testClassName, executionTimes, DataCollectorList.STANDARD);
+		final TestResult tr = new TestResult(testClassName, "", executionTimes, DataCollectorList.STANDARD, Destination.LOCAL);
 		tr.setCollectors(getDataCollectors());
 
 		try {

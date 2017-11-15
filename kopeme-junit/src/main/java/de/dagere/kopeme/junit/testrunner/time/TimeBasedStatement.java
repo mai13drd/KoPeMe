@@ -12,6 +12,7 @@ import de.dagere.kopeme.Finishable;
 import de.dagere.kopeme.TimeBoundExecution;
 import de.dagere.kopeme.datacollection.DataCollectorList;
 import de.dagere.kopeme.datacollection.TestResult;
+import de.dagere.kopeme.datacollection.consumption.Destination;
 import de.dagere.kopeme.junit.testrunner.PerformanceJUnitStatement;
 import de.dagere.kopeme.junit.testrunner.PerformanceMethodStatement;
 
@@ -40,7 +41,7 @@ public class TimeBasedStatement extends PerformanceMethodStatement {
 			@Override
 			public void run() {
 				try {
-					final int executions = calibrateMeasurement(className, method.getName() + " warmup", new TestResult(method.getName(), 1, DataCollectorList.ONLYTIME), duration, repetitions, callee);
+					final int executions = calibrateMeasurement(className, method.getName() + " warmup", new TestResult(className, method.getName(), 1, DataCollectorList.ONLYTIME, Destination.LOCAL), duration, annotation.repetitions(), callee);
 					final TestResult tr = executeSimpleTest(callee, executions);
 					tr.checkValues();
 					if (!assertationvalues.isEmpty()) {
@@ -75,7 +76,7 @@ public class TimeBasedStatement extends PerformanceMethodStatement {
 			}
 		};
 		if (!isFinished){
-			final TimeBoundExecution tbe = new TimeBoundExecution(mainRunnable, timeout, "method");
+			final TimeBoundExecution tbe = new TimeBoundExecution(mainRunnable, annotation.timeout(), "method");
 			tbe.execute();
 		}
 		LOG.debug("Timebounded execution finished");

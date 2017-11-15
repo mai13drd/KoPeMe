@@ -2,6 +2,7 @@ package de.dagere.kopeme;
 
 import static de.dagere.kopeme.PerformanceTestUtils.saveData;
 
+import java.beans.DesignMode;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import de.dagere.kopeme.annotations.MaximalRelativeStandardDeviation;
 import de.dagere.kopeme.annotations.PerformanceTest;
 import de.dagere.kopeme.datacollection.DataCollectorList;
 import de.dagere.kopeme.datacollection.TestResult;
+import de.dagere.kopeme.datacollection.consumption.Destination;
 import de.dagere.kopeme.datastorage.SaveableTestData;
 
 /**
@@ -30,10 +32,11 @@ public class PerformanceTestRunner {
 	protected final Class klasse;
 	protected final Object instanz;
 	protected final Method method;
-	protected int executionTimes, warmupExecutions, repetitions, minEarlyStopExecutions, timeout;
+	protected final int executionTimes, warmupExecutions, repetitions, minEarlyStopExecutions, timeout;
 	protected Map<String, Double> maximalRelativeStandardDeviation;
 	protected Map<String, Long> assertationvalues;
 	protected String filename;
+	private final Destination destination;
 
 	/**
 	 * Initializes the PerformanceTestRunner.
@@ -65,8 +68,19 @@ public class PerformanceTestRunner {
 			for (final Assertion a : annotation.assertions()) {
 				assertationvalues.put(a.collectorname(), a.maxvalue());
 			}
-			
-//			annotation.destination()
+
+			if (annotation.destination().equals("ELASTIC")) {
+				destination = Destination.ELASTIC;
+			} else {
+				destination = Destination.LOCAL;
+			}
+		} else {
+			destination = Destination.LOCAL;
+			executionTimes = 10;
+			warmupExecutions = 5;
+			repetitions = 1;
+			minEarlyStopExecutions = 3;
+			timeout = 5;
 		}
 
 		filename = klasse.getName();
@@ -114,7 +128,7 @@ public class PerformanceTestRunner {
 	 * @throws InvocationTargetException Thrown if an error during method access occurs
 	 */
 	private TestResult executeComplexTest() throws IllegalAccessException, InvocationTargetException {
-		final TestResult tr = new TestResult(method.getName(), warmupExecutions, DataCollectorList.NONE);
+		final TestResult tr = new TestResult(klasse.getName(), method.getName(), warmupExecutions, DataCollectorList.NONE, destination);
 		final Object[] params = { tr };
 		runWarmup(params);
 		TestResult newResult = null;
@@ -122,7 +136,7 @@ public class PerformanceTestRunner {
 			if (!PerformanceTestUtils.checkCollectorValidity(tr, assertationvalues, maximalRelativeStandardDeviation)) {
 				LOG.warn("Not all Collectors are valid!");
 			}
-			newResult = new TestResult(method.getName(), executionTimes, DataCollectorList.STANDARD);
+			newResult = new TestResult(klasse.getName(), method.getName(), executionTimes, DataCollectorList.STANDARD, destination);
 			params[0] = newResult;
 			final PerformanceKoPeMeStatement pts = new PerformanceKoPeMeStatement(method, instanz, false, params, newResult);
 			runMainExecution(pts, newResult);
@@ -144,10 +158,10 @@ public class PerformanceTestRunner {
 	 * @throws InvocationTargetException Thrown if an error during method access occurs
 	 */
 	private TestResult executeSimpleTest() throws IllegalAccessException, InvocationTargetException {
-		TestResult tr = new TestResult(method.getName(), warmupExecutions, DataCollectorList.NONE);
+		TestResult tr = new TestResult(klasse.getName(), method.getName(), warmupExecutions, DataCollectorList.NONE, destination);
 		final Object[] params = {};
 		runWarmup(params);
-		tr = new TestResult(method.getName(), executionTimes, DataCollectorList.STANDARD);
+		tr = new TestResult(klasse.getName(), method.getName(), executionTimes, DataCollectorList.STANDARD, destination);
 
 		if (!PerformanceTestUtils.checkCollectorValidity(tr, assertationvalues, maximalRelativeStandardDeviation)) {
 			LOG.warn("Not all Collectors are valid!");

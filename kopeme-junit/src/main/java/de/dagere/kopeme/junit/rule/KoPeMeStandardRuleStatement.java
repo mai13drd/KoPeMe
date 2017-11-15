@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import de.dagere.kopeme.Finishable;
 import de.dagere.kopeme.TimeBoundExecution;
 import de.dagere.kopeme.datacollection.TestResult;
+import de.dagere.kopeme.datacollection.consumption.Destination;
 import de.dagere.kopeme.datastorage.SaveableTestData;
 
 /**
@@ -26,12 +27,12 @@ import de.dagere.kopeme.datastorage.SaveableTestData;
 public class KoPeMeStandardRuleStatement extends KoPeMeBasicStatement {
 
 	private static final Logger LOG = LogManager.getLogger(KoPeMeStandardRuleStatement.class);
-	
+
 	private final TestResult tr;
-	
-	public KoPeMeStandardRuleStatement(final TestRunnables runnables, final Method method, final String filename) {
+
+	public KoPeMeStandardRuleStatement(final TestRunnables runnables, final String clazz, final Method method, final String filename) {
 		super(runnables, method, filename);
-		 tr = new TestResult(method.getName(), annotation.warmupExecutions(), datacollectors);
+		tr = new TestResult(clazz, method.getName(), annotation.warmupExecutions(), datacollectors, Destination.LOCAL);
 	}
 
 	@Override
@@ -39,7 +40,7 @@ public class KoPeMeStandardRuleStatement extends KoPeMeBasicStatement {
 		final Finishable finishable = new Finishable() {
 			@Override
 			public void run() {
-				
+
 				try {
 					executeSimpleTest(tr);
 					if (!assertationvalues.isEmpty()) {
@@ -62,7 +63,7 @@ public class KoPeMeStandardRuleStatement extends KoPeMeBasicStatement {
 				KoPeMeStandardRuleStatement.this.isFinished = isFinished;
 			}
 		};
-		
+
 		final TimeBoundExecution tbe = new TimeBoundExecution(finishable, annotation.timeout(), "method");
 		tbe.execute();
 		LOG.info("Test {} beendet", filename);
@@ -73,8 +74,8 @@ public class KoPeMeStandardRuleStatement extends KoPeMeBasicStatement {
 			LOG.warn("Not all Collectors are valid!");
 		}
 		try {
-			//Run warmup
-			runMainExecution(new TestResult(method.getName(), annotation.warmupExecutions(), datacollectors), "warmup execution ", annotation.warmupExecutions());
+			// Run warmup
+			runMainExecution(new TestResult(tr.getClazzname(), method.getName(), annotation.warmupExecutions(), datacollectors, Destination.LOCAL), "warmup execution ", annotation.warmupExecutions());
 			runMainExecution(tr, "execution ", annotation.executionTimes());
 		} catch (final AssertionFailedError t) {
 			tr.finalizeCollection();

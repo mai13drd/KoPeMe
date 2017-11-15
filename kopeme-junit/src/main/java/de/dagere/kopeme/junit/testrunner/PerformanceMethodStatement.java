@@ -11,6 +11,7 @@ import de.dagere.kopeme.PerformanceTestUtils;
 import de.dagere.kopeme.TimeBoundExecution;
 import de.dagere.kopeme.annotations.PerformanceTest;
 import de.dagere.kopeme.datacollection.TestResult;
+import de.dagere.kopeme.datacollection.consumption.Destination;
 import de.dagere.kopeme.datastorage.SaveableTestData;
 import de.dagere.kopeme.junit.rule.KoPeMeBasicStatement;
 import de.dagere.kopeme.kieker.KoPeMeKiekerSupport;
@@ -20,21 +21,15 @@ public class PerformanceMethodStatement extends KoPeMeBasicStatement {
 	private static final Logger LOG = LogManager.getLogger(PerformanceMethodStatement.class);
 
 	protected final PerformanceJUnitStatement callee;
-	protected final int timeout;
-	protected int warmupExecutions;
 	protected final String className, methodName;
 	protected final boolean saveFullData;
 	protected boolean isFinished = false;
 	protected Finishable mainRunnable;
-	protected final int repetitions;
 
 	public PerformanceMethodStatement(final PerformanceJUnitStatement callee, final String filename, final Class<?> calledClass, final FrameworkMethod method, final boolean saveFullData) {
 		super(null, method.getMethod(), filename);
 		this.callee = callee;
 		this.saveFullData = saveFullData ? saveFullData : annotation.logFullData();
-		warmupExecutions = annotation.warmupExecutions();
-		repetitions = annotation.repetitions();
-		timeout = annotation.timeout();
 		this.methodName = method.getName();
 		this.className = calledClass.getSimpleName(); // The name of the testcase-class is recorded; if tests of subclasses are called, they belong to the testcase of the superclass anyway
 	}
@@ -82,7 +77,7 @@ public class PerformanceMethodStatement extends KoPeMeBasicStatement {
 			}
 		};
 		if (!isFinished){
-			final TimeBoundExecution tbe = new TimeBoundExecution(mainRunnable, timeout, "method");
+			final TimeBoundExecution tbe = new TimeBoundExecution(mainRunnable, annotation.timeout(), "method");
 			tbe.execute();
 		}
 		LOG.debug("Timebounded execution finished");
@@ -98,20 +93,20 @@ public class PerformanceMethodStatement extends KoPeMeBasicStatement {
 	 *             Any exception that occurs during the test
 	 */
 	protected TestResult executeSimpleTest(final PerformanceJUnitStatement callee, int executions) throws Throwable {
-		final TestResult tr = new TestResult(methodName, executions, datacollectors);
+		final TestResult tr = new TestResult(className, methodName, executions, datacollectors, Destination.parse(annotation.destination()));
 
 		if (!PerformanceTestUtils.checkCollectorValidity(tr, assertationvalues, maximalRelativeStandardDeviation)) {
 			LOG.warn("Not all Collectors are valid!");
 		}
 		try {
-			runMainExecution(tr, "execution ",executions, callee, repetitions);
+			runMainExecution(tr, "execution ",executions, callee, annotation.repetitions());
 		} catch (final Throwable t) {
 			tr.finalizeCollection();
-			saveData(SaveableTestData.createErrorTestData(methodName, filename, tr, warmupExecutions, saveFullData));
+			saveData(SaveableTestData.createErrorTestData(methodName, filename, tr, annotation.warmupExecutions(), saveFullData));
 			throw t;
 		}
 		tr.finalizeCollection();
-		saveData(SaveableTestData.createFineTestData(methodName, filename, tr, warmupExecutions, saveFullData));
+		saveData(SaveableTestData.createFineTestData(methodName, filename, tr, annotation.warmupExecutions(), saveFullData));
 		return tr;
 	}
 
@@ -124,14 +119,13 @@ public class PerformanceMethodStatement extends KoPeMeBasicStatement {
 	 *             Any exception that occurs during the test
 	 */
 	private void runWarmup(final PerformanceJUnitStatement callee) throws Throwable {
-		final TestResult tr = new TestResult(methodName, annotation.warmupExecutions(), datacollectors);
+		final TestResult tr = new TestResult(className, methodName, annotation.warmupExecutions(), datacollectors, Destination.LOCAL);
 
 		if (!PerformanceTestUtils.checkCollectorValidity(tr, assertationvalues, maximalRelativeStandardDeviation)) {
 			LOG.warn("Not all Collectors are valid!");
 		}
 		try {
-			runMainExecution(tr, "warmup execution ", annotation.warmupExecutions(), callee, repetitions);
-			warmupExecutions = tr.getRealExecutions();
+			runMainExecution(tr, "warmup execution ", annotation.warmupExecutions(), callee, annotation.repetitions());
 		} catch (final Throwable t) {
 			tr.finalizeCollection();
 			throw t;

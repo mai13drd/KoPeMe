@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import de.dagere.kopeme.PerformanceTestUtils;
 import de.dagere.kopeme.datacollection.DataCollectorList;
 import de.dagere.kopeme.datacollection.TestResult;
+import de.dagere.kopeme.datacollection.consumption.Destination;
 import de.dagere.kopeme.datastorage.SaveableTestData;
 
 /**
@@ -64,7 +65,7 @@ public abstract class TimeBasedTestcase extends KoPeMeTestcase {
 		LOG.debug("Duration: " + durationInMilliseconds);
 		final String testClassName = this.getClass().getName();
 		final long maximumDuration = durationInMilliseconds * 1000 * NANOTOMIKRO; // Default maximum test duration: 1000 ms = 1 second
-		final TestResult tr = new TestResult(testClassName, -1, DataCollectorList.ONLYTIME);
+		final TestResult tr = new TestResult(testClassName, "", -1, DataCollectorList.ONLYTIME, Destination.LOCAL);
 		final int executionTimes = calibrateMeasurement("warmup", testClassName, tr, maximumDuration);
 
 		final String fullName = this.getClass().getName() + "." + getName();

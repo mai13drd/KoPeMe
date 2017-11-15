@@ -13,6 +13,7 @@ import de.dagere.kopeme.annotations.PerformanceTestingClass;
 import de.dagere.kopeme.datacollection.DataCollectorList;
 import de.dagere.kopeme.datacollection.TestResult;
 import de.dagere.kopeme.datacollection.TimeDataCollector;
+import de.dagere.kopeme.datacollection.consumption.Destination;
 import de.dagere.kopeme.datastorage.SaveableTestData;
 import de.dagere.kopeme.kieker.KoPeMeKiekerSupport;
 import junit.framework.AssertionFailedError;
@@ -121,7 +122,7 @@ public abstract class KoPeMeTestcase extends TestCase {
 		final long timeoutTime = getMaximalTime();
 
 		final String testClassName = this.getClass().getName();
-		final TestResult tr = new TestResult(testClassName, executionTimes, DataCollectorList.STANDARD);
+		final TestResult tr = new TestResult(testClassName, "method", executionTimes, DataCollectorList.STANDARD, Destination.LOCAL);
 		tr.setCollectors(getDataCollectors());
 
 		try {
@@ -218,7 +219,7 @@ public abstract class KoPeMeTestcase extends TestCase {
 
 		final String fullName = this.getClass().getName() + "." + getName();
 		try {
-			final TestResult bulkResult = new TestResult(tr.getTestcase(), executionTimes, getDataCollectors());
+			final TestResult bulkResult = new TestResult(tr.getClazzname(), tr.getMethodName(), executionTimes, getDataCollectors(), tr.getDestination());
 			runMainExecution("warmup", fullName, bulkResult, warmupExecutions);
 			runMainExecution("main", fullName, tr, executionTimes);
 		} catch (final AssertionFailedError t) {

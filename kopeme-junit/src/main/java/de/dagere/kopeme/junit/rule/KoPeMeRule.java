@@ -52,7 +52,7 @@ public class KoPeMeRule implements TestRule {
 				}
 			}, testClass, testObject);
 
-			koPeMeStandardRuleStatement = new KoPeMeStandardRuleStatement(runnables, testMethod, testClass.getName());
+			koPeMeStandardRuleStatement = new KoPeMeStandardRuleStatement(runnables, testClass.getName(), testMethod, testClass.getName());
 			return koPeMeStandardRuleStatement; 
 		} else {
 			return stmt;

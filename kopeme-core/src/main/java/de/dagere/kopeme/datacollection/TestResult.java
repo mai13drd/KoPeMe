@@ -1,6 +1,5 @@
 package de.dagere.kopeme.datacollection;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hamcrest.Matchers;
@@ -20,6 +18,8 @@ import org.junit.Assert;
 
 import de.dagere.kopeme.Checker;
 import de.dagere.kopeme.datacollection.consumption.DataConsumer;
+import de.dagere.kopeme.datacollection.consumption.Destination;
+import de.dagere.kopeme.datacollection.consumption.ElasticConsumer;
 import de.dagere.kopeme.datacollection.consumption.LocalDataConsumer;
 import de.dagere.kopeme.measuresummarizing.AverageSummerizer;
 import de.dagere.kopeme.measuresummarizing.MeasureSummarizer;
@@ -39,11 +39,14 @@ public class TestResult {
 	protected int index = 0;
 	protected Checker checker;
 	private int realExecutions;
+	private final String clazzname;
 	private String methodName;
 	private final HistoricalTestResults historicalResults;
 	private final DataConsumer consumer;
 
 	private final Map<String, MeasureSummarizer> collectorSummarizerMap;
+
+	private final Destination destination;
 
 	/**
 	 * Initializes the TestResult with a Testcase-Name and the executionTimes.
@@ -51,17 +54,20 @@ public class TestResult {
 	 * @param methodName Name of the Testcase
 	 * @param executionTimes Count of the planned executions
 	 */
-	public TestResult(final String methodName, final int executionTimes, final DataCollectorList collectors) {
-		consumer = new LocalDataConsumer(executionTimes);
+	public TestResult(final String clazzname, final String methodName, final int executionTimes, final DataCollectorList collectors, final Destination destination) {
+		this.destination = destination;
+		if (destination.equals(de.dagere.kopeme.datacollection.consumption.Destination.LOCAL)) {
+			consumer = new LocalDataConsumer(executionTimes);
+		} else {
+			consumer = new ElasticConsumer(clazzname + "_" + methodName);
+		}
+
+		this.clazzname = clazzname;
 		this.methodName = methodName;
 		historicalResults = new HistoricalTestResults(methodName);
 
 		collectorSummarizerMap = new HashMap<>();
 		dataCollectors = collectors.getDataCollectors();
-	}
-
-	public void setMethodName(final String methodName) {
-		this.methodName = methodName;
 	}
 
 	/**
@@ -188,8 +194,8 @@ public class TestResult {
 	 * values and historical data is not possible. For this, call finalizeCollection.
 	 */
 	public void stopCollection() {
-//		if 
-		
+		// if
+
 		final Map<String, Long> runData = new HashMap<>();
 		for (final DataCollector dc : dataCollectors.values()) {
 			dc.stopCollection();
@@ -198,7 +204,7 @@ public class TestResult {
 			runData.put(dc.getName(), dc.getValue());
 		}
 		consumer.addData(runData);
-//		realValues.add(runData);
+		// realValues.add(runData);
 		index++;
 	}
 
@@ -224,7 +230,7 @@ public class TestResult {
 		for (final String collectorName : getKeys()) {
 			LOG.trace("Standardabweichung {}: {}", collectorName, getRelativeStandardDeviation(collectorName));
 			final List<Long> localValues = new LinkedList<>();
-			for (Long value : consumer.getValues(collectorName)){
+			for (Long value : consumer.getValues(collectorName)) {
 				localValues.add(value);
 			}
 			Long result;
@@ -373,5 +379,17 @@ public class TestResult {
 
 	public String getMethodName() {
 		return methodName;
+	}
+
+	public String getClazzname() {
+		return clazzname;
+	}
+
+	public Destination getDestination() {
+		return destination;
+	}
+
+	public void setMethodName(String methodName) {
+		this.methodName = methodName;
 	}
 }

@@ -11,13 +11,15 @@ import org.junit.Test;
 
 import de.dagere.kopeme.datacollection.DataCollectorList;
 import de.dagere.kopeme.datacollection.TestResult;
+import de.dagere.kopeme.datacollection.consumption.Destination;
 
 public class TestSaveableTestData {
 
 	private static final String RESULT_FILENAME = "myFileName";
 	private static final String THIS_DIR = ".";
+	private static final String MY_TEST_CLASS_NAME = "TestClazz";
 	private static final String MY_TEST_CASE_NAME = "myTestCaseName";
-	private static final TestResult COMPLEX = new TestResult(MY_TEST_CASE_NAME, 1, DataCollectorList.STANDARD);
+	private static final TestResult COMPLEX = new TestResult(MY_TEST_CLASS_NAME, MY_TEST_CASE_NAME, 1, DataCollectorList.STANDARD, Destination.LOCAL);
 	private static final boolean SAVE_VALUES = true;
 
 	@Test
