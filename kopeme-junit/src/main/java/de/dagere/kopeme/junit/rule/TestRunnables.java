@@ -24,6 +24,7 @@ public class TestRunnables {
    private static final Logger LOG = LogManager.getLogger(TestRunnables.class);
 
    private final ThrowingRunnable testRunnable, beforeRunnable, afterRunnable;
+   private final ThrowingRunnable beforeClassRunnable, afterClassRunnable;
 
    /**
     * Initializes the TestRunnables
@@ -33,10 +34,11 @@ public class TestRunnables {
     * @param testObject Object that should be tested
     */
    public TestRunnables(final ThrowingRunnable testRunnable, final Class<?> testClass, final Object testObject) {
-      super();
       this.testRunnable = testRunnable;
-      final List<Method> beforeMethods = new LinkedList<>();
-      final List<Method> afterMethods = new LinkedList<>();
+      final List<Method> beforeNoMeasurementMethods = new LinkedList<>();
+      final List<Method> beforeClassMethods = new LinkedList<>();
+      final List<Method> afterNoMeasurementMethods = new LinkedList<>();
+      final List<Method> afterClassMethods = new LinkedList<>();
       LOG.debug("Klasse: {}", testClass);
       for (final Method classMethod : testClass.getMethods()) {
          LOG.trace("Prüfe: {}", classMethod);
@@ -44,13 +46,13 @@ public class TestRunnables {
             if (classMethod.getParameterTypes().length > 0) {
                throw new RuntimeException("BeforeNoMeasurement-methods must not have arguments");
             }
-            beforeMethods.add(classMethod);
+            beforeNoMeasurementMethods.add(classMethod);
          }
          if (classMethod.getAnnotation(AfterNoMeasurement.class) != null) {
             if (classMethod.getParameterTypes().length > 0) {
                throw new RuntimeException("AfterNoMeasurement-methods must not have arguments");
             }
-            afterMethods.add(classMethod);
+            afterNoMeasurementMethods.add(classMethod);
          }
       }
 
@@ -58,7 +60,7 @@ public class TestRunnables {
 
          @Override
          public void run() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-            for (final Method method : beforeMethods) {
+            for (final Method method : beforeNoMeasurementMethods) {
                method.invoke(testObject);
             }
 
@@ -69,7 +71,28 @@ public class TestRunnables {
 
          @Override
          public void run() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-            for (final Method method : afterMethods) {
+            for (final Method method : afterNoMeasurementMethods) {
+               method.invoke(testObject);
+            }
+         }
+      };
+      
+      beforeClassRunnable = new ThrowingRunnable() {
+
+         @Override
+         public void run() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+            for (final Method method : beforeClassMethods) {
+               method.invoke(testObject);
+            }
+
+         }
+      };
+
+      afterClassRunnable = new ThrowingRunnable() {
+
+         @Override
+         public void run() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+            for (final Method method : afterClassMethods) {
                method.invoke(testObject);
             }
          }
@@ -101,5 +124,13 @@ public class TestRunnables {
     */
    public ThrowingRunnable getAfterRunnable() {
       return afterRunnable;
+   }
+
+   public ThrowingRunnable getBeforeClassRunnables() {
+      return beforeClassRunnable;
+   }
+   
+   public ThrowingRunnable getAfterClassRunnables() {
+      return afterClassRunnable;
    }
 }

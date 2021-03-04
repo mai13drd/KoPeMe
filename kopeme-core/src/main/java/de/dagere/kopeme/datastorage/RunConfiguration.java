@@ -4,25 +4,28 @@ import de.dagere.kopeme.annotations.PerformanceTest;
 
 public class RunConfiguration {
    private final int warmupExecutions, repetitions;
-   private final boolean showStart, redirectToTemp, redirectToNull;
+   private final boolean showStart, redirectToTemp, redirectToNull, useBeforeClassEverytime;
    private boolean saveValues;
    
-   public RunConfiguration(int warmupExecutions, int repetitions, boolean showStart, boolean redirectToTemp, boolean redirectToNull, boolean saveValues) {
+   public RunConfiguration(final int warmupExecutions, final int repetitions, final boolean showStart, final boolean redirectToTemp, 
+         final boolean redirectToNull, final boolean saveValues, final boolean useBeforeClassEverytime) {
       this.warmupExecutions = warmupExecutions;
       this.repetitions = repetitions;
       this.showStart = showStart;
       this.redirectToTemp = redirectToTemp;
       this.redirectToNull = redirectToNull;
       this.saveValues = saveValues;
+      this.useBeforeClassEverytime = useBeforeClassEverytime;
    }
 
-   public RunConfiguration(PerformanceTest annotation) {
+   public RunConfiguration(final PerformanceTest annotation) {
       warmupExecutions = annotation.warmup();
       repetitions = annotation.repetitions();
       showStart = annotation.showStart();
       redirectToTemp = annotation.redirectToTemp();
       redirectToNull = annotation.redirectToNull();
       saveValues = annotation.logFullData();
+      useBeforeClassEverytime = annotation.useBeforeClassEverytime();
    }
 
    public int getWarmupExecutions() {
@@ -44,12 +47,16 @@ public class RunConfiguration {
    public boolean isRedirectToNull() {
       return redirectToNull;
    }
+   
+   public boolean isUseBeforeClassEverytime() {
+      return useBeforeClassEverytime;
+   }
 
    public boolean isSaveValues() {
       return saveValues;
    }
    
-   public void setSaveValues(boolean saveValues) {
+   public void setSaveValues(final boolean saveValues) {
       this.saveValues = saveValues;
    }
 }

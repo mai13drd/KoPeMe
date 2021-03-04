@@ -164,6 +164,7 @@ public class PerformanceTestRunnerJUnit extends BlockJUnit4ClassRunner {
 
          final List<FrameworkMethod> befores = getTestClass().getAnnotatedMethods(Before.class);
          final List<FrameworkMethod> afters = getTestClass().getAnnotatedMethods(After.class);
+         
          final PerformanceJUnitStatement perfStatement = new PerformanceJUnitStatement(withRuleStatement, testObject, befores, afters);
 
          return perfStatement;
@@ -172,7 +173,7 @@ public class PerformanceTestRunnerJUnit extends BlockJUnit4ClassRunner {
       }
    }
    
-   private Statement ruleInvoker(final FrameworkMethod currentMethod, Object testObject, Statement testExceptionTimeoutStatement) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+   private Statement ruleInvoker(final FrameworkMethod currentMethod, final Object testObject, final Statement testExceptionTimeoutStatement) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
       final Method withRulesMethod = BlockJUnit4ClassRunner.class.getDeclaredMethod("withRules", FrameworkMethod.class, Object.class, Statement.class);
       withRulesMethod.setAccessible(true);
       final Statement withRuleStatement = (Statement) withRulesMethod.invoke(this, new Object[] { currentMethod, testObject, testExceptionTimeoutStatement });

@@ -157,7 +157,13 @@ public abstract class KoPeMeBasicStatement extends Statement {
 
    private void runAllRepetitions(final int repetitions) throws Throwable {
       for (int repetition = 0; repetition < repetitions; repetition++) {
+         if (annotation.useBeforeClassEverytime()) {
+            runnables.getBeforeClassRunnables().run();
+         }
          runnables.getTestRunnable().run();
+         if (annotation.useBeforeClassEverytime()) {
+            runnables.getAfterClassRunnables().run();
+         }
       }
    }
 
